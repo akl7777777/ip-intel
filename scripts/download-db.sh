@@ -16,7 +16,7 @@ mkdir -p "$DATA_DIR"
 echo "Downloading GeoLite2-ASN compatible MMDB from sapics/ip-location-db..."
 echo "(No registration required)"
 
-URL="https://github.com/sapics/ip-location-db/raw/main/asn/asn.mmdb"
+URL="https://github.com/sapics/ip-location-db/raw/main/asn-mmdb/asn.mmdb"
 
 # Download to temp file
 if ! curl -fSL -o "$TEMP_FILE" "$URL"; then

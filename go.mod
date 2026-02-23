@@ -1,6 +1,6 @@
 module github.com/akl7777777/ip-intel
 
-go 1.25.4
+go 1.23.4
 
 require github.com/oschwald/maxminddb-golang v1.13.1
 

@@ -21,6 +21,6 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/ip-intel /ip-intel
 
-EXPOSE 8080
+EXPOSE 9090
 
 ENTRYPOINT ["/ip-intel"]

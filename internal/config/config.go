@@ -31,7 +31,7 @@ type Config struct {
 
 func Load() *Config {
 	cfg := &Config{
-		Port:     envOrDefault("PORT", "8080"),
+		Port:     envOrDefault("PORT", "9090"),
 		Host:     envOrDefault("HOST", "0.0.0.0"),
 		AuthKey:  os.Getenv("AUTH_KEY"),
 		CacheTTL: envDurationOrDefault("CACHE_TTL_HOURS", 6) * time.Hour,

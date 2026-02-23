@@ -27,7 +27,7 @@ bash scripts/download-db.sh
 docker compose up -d
 
 # 3. Test
-curl http://localhost:8066/api/v1/lookup/8.8.8.8
+curl http://localhost:9090/8.8.8.8
 ```
 
 ### Build from Source
@@ -46,7 +46,7 @@ go build -o ip-intel .
 ### Lookup IP
 
 ```
-GET /api/v1/lookup/{ip}
+GET /{ip}
 Authorization: Bearer <key>    # Optional, only if AUTH_KEY is set
 ```
 
@@ -88,7 +88,7 @@ Response `200 OK`:
 ### Health Check
 
 ```
-GET /api/v1/health
+GET /-/health
 ```
 
 Returns `{"status": "ok"}`. This endpoint bypasses authentication.
@@ -96,7 +96,7 @@ Returns `{"status": "ok"}`. This endpoint bypasses authentication.
 ### Service Stats
 
 ```
-GET /api/v1/stats
+GET /-/stats
 ```
 
 Returns cache size, provider status, local database status, and known ASN count.
@@ -107,7 +107,7 @@ All configuration is done via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `8080` | Listen port |
+| `PORT` | `9090` | Listen port |
 | `HOST` | `0.0.0.0` | Listen address |
 | `AUTH_KEY` | _(empty)_ | Bearer token for authentication. Empty = no auth |
 | `CACHE_TTL_HOURS` | `6` | Cache TTL in hours |
@@ -166,7 +166,7 @@ Call this service from your application:
 ```go
 func LookupIPIntel(ip string) (*IPIntelResult, error) {
     req, _ := http.NewRequest("GET",
-        fmt.Sprintf("http://ip-intel:8080/api/v1/lookup/%s", ip), nil)
+        fmt.Sprintf("http://ip-intel:9090/%s", ip), nil)
     req.Header.Set("Authorization", "Bearer YOUR_KEY")
 
     resp, err := http.DefaultClient.Do(req)

@@ -25,7 +25,7 @@ bash scripts/download-db.sh
 docker compose up -d
 
 # 3. 测试
-curl http://localhost:8066/api/v1/lookup/8.8.8.8
+curl http://localhost:9090/8.8.8.8
 ```
 
 ### 本地编译运行
@@ -44,7 +44,7 @@ go build -o ip-intel .
 ### 查询 IP
 
 ```
-GET /api/v1/lookup/{ip}
+GET /{ip}
 Authorization: Bearer <密钥>    # 可选，仅设置 AUTH_KEY 时需要
 ```
 
@@ -86,7 +86,7 @@ Authorization: Bearer <密钥>    # 可选，仅设置 AUTH_KEY 时需要
 ### 健康检查
 
 ```
-GET /api/v1/health
+GET /-/health
 ```
 
 返回 `{"status": "ok"}`。该接口不需要鉴权。
@@ -94,7 +94,7 @@ GET /api/v1/health
 ### 服务状态
 
 ```
-GET /api/v1/stats
+GET /-/stats
 ```
 
 返回缓存大小、Provider 状态、本地数据库状态等信息。
@@ -105,7 +105,7 @@ GET /api/v1/stats
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `PORT` | `8080` | 监听端口 |
+| `PORT` | `9090` | 监听端口 |
 | `HOST` | `0.0.0.0` | 监听地址 |
 | `AUTH_KEY` | _空_ | Bearer Token 鉴权密钥，留空则不鉴权 |
 | `CACHE_TTL_HOURS` | `6` | 缓存有效期（小时） |
@@ -164,7 +164,7 @@ bash scripts/download-db.sh
 ```go
 func LookupIPIntel(ip string) (*IPIntelResult, error) {
     req, _ := http.NewRequest("GET",
-        fmt.Sprintf("http://ip-intel:8080/api/v1/lookup/%s", ip), nil)
+        fmt.Sprintf("http://ip-intel:9090/%s", ip), nil)
     req.Header.Set("Authorization", "Bearer YOUR_KEY")
 
     resp, err := http.DefaultClient.Do(req)

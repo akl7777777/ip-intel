@@ -31,9 +31,9 @@ func New(svc *lookup.Service, authKey string) *Server {
 }
 
 func (s *Server) routes() {
-	s.mux.HandleFunc("/api/v1/lookup/", s.handleLookup)
-	s.mux.HandleFunc("/api/v1/health", s.handleHealth)
-	s.mux.HandleFunc("/api/v1/stats", s.handleStats)
+	s.mux.HandleFunc("/-/health", s.handleHealth)
+	s.mux.HandleFunc("/-/stats", s.handleStats)
+	s.mux.HandleFunc("/", s.handleLookup) // catch-all: /{ip}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,8 +49,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Auth check (skip for health endpoint)
-	if s.authKey != "" && r.URL.Path != "/api/v1/health" {
+	// Auth check (skip for /-/ operational endpoints)
+	if s.authKey != "" && !strings.HasPrefix(r.URL.Path, "/-/") {
 		auth := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(auth, "Bearer ")
 		if token == "" || token == auth {
@@ -75,12 +75,17 @@ func (s *Server) handleLookup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract IP from path: /api/v1/lookup/{ip}
-	ip := strings.TrimPrefix(r.URL.Path, "/api/v1/lookup/")
+	// Extract IP from path: /{ip}
+	ip := strings.TrimPrefix(r.URL.Path, "/")
 	ip = strings.TrimSpace(ip)
 
 	if ip == "" {
-		writeError(w, http.StatusBadRequest, "IP address required")
+		writeJSON(w, http.StatusOK, map[string]string{
+			"service": "ip-intel",
+			"usage":   "GET /{ip}",
+			"health":  "GET /-/health",
+			"stats":   "GET /-/stats",
+		})
 		return
 	}
 

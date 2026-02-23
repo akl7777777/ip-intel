@@ -4,11 +4,11 @@ services:
     container_name: ip-intel
     restart: unless-stopped
     ports:
-      - "8066:8080"
+      - "9090:9090"
     volumes:
       - ./data:/data
     environment:
-      - PORT=8080
+      - PORT=9090
       - HOST=0.0.0.0
       - CACHE_TTL_HOURS=6
       - MMDB_PATH=/data/GeoLite2-ASN.mmdb

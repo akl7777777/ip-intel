@@ -129,6 +129,8 @@ GET /-/stats
 
 不配置 API Key 的情况下，前 4 个免费 Provider 足够日常使用。
 
+> **注意：** ip-api.com 免费版**仅限非商业用途**。商用项目请购买 [ip-api Pro](https://members.ip-api.com/) 或通过 `ENABLED_PROVIDERS=ipwhois,freeipapi,ipapi-co` 排除。
+
 ## 本地数据库
 
 ### ASN 数据库（MMDB）

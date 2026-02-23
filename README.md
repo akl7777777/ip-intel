@@ -131,6 +131,8 @@ Built-in support for 6 providers with automatic rotation and per-provider rate l
 
 The first 4 free providers are sufficient for normal usage without any API keys.
 
+> **Note:** ip-api.com free tier is for **non-commercial use only**. For commercial projects, either purchase [ip-api Pro](https://members.ip-api.com/) or exclude it via `ENABLED_PROVIDERS=ipwhois,freeipapi,ipapi-co`.
+
 ## Local Database
 
 ### ASN Database (MMDB)

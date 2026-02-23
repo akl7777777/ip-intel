@@ -332,5 +332,10 @@ func InitProviders(cfg *config.Config) []*Provider {
 		log.Printf("[providers]   %s (rate_limit=%d/min, %s)", p.Name, p.RateLimit, status)
 	}
 
+	// Commercial use notice
+	log.Printf("[providers] NOTE: ip-api.com free tier is for non-commercial use only.")
+	log.Printf("[providers]   For commercial use, either purchase ip-api Pro or exclude it")
+	log.Printf("[providers]   via ENABLED_PROVIDERS (e.g. ENABLED_PROVIDERS=ipwhois,freeipapi,ipapi-co)")
+
 	return providers
 }

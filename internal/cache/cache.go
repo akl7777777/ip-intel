@@ -1,25 +1,27 @@
-package main
+package cache
 
 import (
 	"sync"
 	"time"
+
+	"github.com/akl7777777/ip-intel/internal/model"
 )
 
-type cacheEntry struct {
-	data      *IPInfo
+type entry struct {
+	data      *model.IPInfo
 	expiresAt time.Time
 }
 
 type Cache struct {
-	mu      sync.RWMutex
-	items   map[string]*cacheEntry
-	ttl     time.Duration
-	stopCh  chan struct{}
+	mu     sync.RWMutex
+	items  map[string]*entry
+	ttl    time.Duration
+	stopCh chan struct{}
 }
 
-func NewCache(ttl time.Duration) *Cache {
+func New(ttl time.Duration) *Cache {
 	c := &Cache{
-		items:  make(map[string]*cacheEntry),
+		items:  make(map[string]*entry),
 		ttl:    ttl,
 		stopCh: make(chan struct{}),
 	}
@@ -27,27 +29,27 @@ func NewCache(ttl time.Duration) *Cache {
 	return c
 }
 
-func (c *Cache) Get(ip string) (*IPInfo, bool) {
+func (c *Cache) Get(ip string) (*model.IPInfo, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	entry, ok := c.items[ip]
+	e, ok := c.items[ip]
 	if !ok {
 		return nil, false
 	}
-	if time.Now().After(entry.expiresAt) {
+	if time.Now().After(e.expiresAt) {
 		return nil, false
 	}
-	result := *entry.data
+	result := *e.data
 	result.Cached = true
 	return &result, true
 }
 
-func (c *Cache) Set(ip string, info *IPInfo) {
+func (c *Cache) Set(ip string, info *model.IPInfo) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.items[ip] = &cacheEntry{
+	c.items[ip] = &entry{
 		data:      info,
 		expiresAt: time.Now().Add(c.ttl),
 	}
@@ -57,6 +59,10 @@ func (c *Cache) Size() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return len(c.items)
+}
+
+func (c *Cache) TTL() time.Duration {
+	return c.ttl
 }
 
 func (c *Cache) Stop() {

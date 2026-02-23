@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"os"
@@ -29,7 +29,7 @@ type Config struct {
 	EnabledProviders []string
 }
 
-func LoadConfig() *Config {
+func Load() *Config {
 	cfg := &Config{
 		Port:     envOrDefault("PORT", "8080"),
 		Host:     envOrDefault("HOST", "0.0.0.0"),

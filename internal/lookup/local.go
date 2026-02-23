@@ -1,4 +1,4 @@
-package main
+package lookup
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/akl7777777/ip-intel/internal/model"
 	"github.com/oschwald/maxminddb-golang"
 )
 
@@ -38,7 +39,7 @@ func NewLocalDB(path string) *LocalDB {
 }
 
 // Lookup queries the local MMDB for ASN info, then checks the datacenter ASN list.
-func (db *LocalDB) Lookup(ipStr string) (*IPInfo, error) {
+func (db *LocalDB) Lookup(ipStr string) (*model.IPInfo, error) {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
 		return nil, fmt.Errorf("invalid IP: %s", ipStr)
@@ -50,12 +51,12 @@ func (db *LocalDB) Lookup(ipStr string) (*IPInfo, error) {
 		return nil, fmt.Errorf("MMDB lookup failed: %w", err)
 	}
 
-	info := &IPInfo{
-		IP:          ipStr,
-		ASN:         record.AutonomousSystemNumber,
-		ASNOrg:      record.AutonomousSystemOrganization,
-		ISP:         record.AutonomousSystemOrganization,
-		Source:      "local",
+	info := &model.IPInfo{
+		IP:     ipStr,
+		ASN:    record.AutonomousSystemNumber,
+		ASNOrg: record.AutonomousSystemOrganization,
+		ISP:    record.AutonomousSystemOrganization,
+		Source: "local",
 	}
 
 	// Check against known datacenter ASN list
@@ -72,10 +73,4 @@ func (db *LocalDB) Close() {
 	if db != nil && db.reader != nil {
 		db.reader.Close()
 	}
-}
-
-// LookupByASNOnly checks the embedded ASN list without MMDB.
-// Used when no MMDB is available.
-func LookupByASNOnly(asn int) (string, bool) {
-	return IsKnownDatacenterASN(asn)
 }

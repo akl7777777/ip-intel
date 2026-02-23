@@ -1,4 +1,4 @@
-package main
+package model
 
 // IPInfo is the result of an IP intelligence lookup.
 type IPInfo struct {
@@ -29,15 +29,15 @@ type ProviderStatus struct {
 
 // StatsResponse is returned by the /stats endpoint.
 type StatsResponse struct {
-	CacheSize  int              `json:"cache_size"`
-	CacheTTL   string           `json:"cache_ttl"`
-	Providers  []ProviderStatus `json:"providers"`
-	LocalDB    bool             `json:"local_db_loaded"`
-	KnownASNs  int              `json:"known_datacenter_asns"`
+	CacheSize int              `json:"cache_size"`
+	CacheTTL  string           `json:"cache_ttl"`
+	Providers []ProviderStatus `json:"providers"`
+	LocalDB   bool             `json:"local_db_loaded"`
+	KnownASNs int              `json:"known_datacenter_asns"`
 }
 
 // ErrorResponse is returned on error.
 type ErrorResponse struct {
-	Error   string `json:"error"`
-	Code    int    `json:"code"`
+	Error string `json:"error"`
+	Code  int    `json:"code"`
 }

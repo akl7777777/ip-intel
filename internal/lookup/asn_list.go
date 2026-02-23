@@ -1,9 +1,9 @@
-package main
+package lookup
 
-// datacenterASNs contains known datacenter/cloud/hosting provider ASNs.
+// DatacenterASNs contains known datacenter/cloud/hosting provider ASNs.
 // Only includes providers that are indisputably hosting infrastructure.
 // Source: public BGP data + official provider documentation.
-var datacenterASNs = map[int]string{
+var DatacenterASNs = map[int]string{
 	// === Major Cloud Providers ===
 	16509:  "Amazon.com / AWS",
 	14618:  "Amazon.com / AWS",
@@ -109,6 +109,6 @@ var datacenterASNs = map[int]string{
 
 // IsKnownDatacenterASN checks if an ASN belongs to a known datacenter.
 func IsKnownDatacenterASN(asn int) (string, bool) {
-	org, ok := datacenterASNs[asn]
+	org, ok := DatacenterASNs[asn]
 	return org, ok
 }

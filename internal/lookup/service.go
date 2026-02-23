@@ -1,20 +1,24 @@
-package main
+package lookup
 
 import (
 	"log"
+
+	"github.com/akl7777777/ip-intel/internal/cache"
+	"github.com/akl7777777/ip-intel/internal/config"
+	"github.com/akl7777777/ip-intel/internal/model"
 )
 
 // Service is the core IP intelligence lookup service.
 type Service struct {
-	cache     *Cache
+	cache     *cache.Cache
 	localDB   *LocalDB
 	providers []*Provider
 }
 
 // NewService creates a new service instance.
-func NewService(cfg *Config) *Service {
+func NewService(cfg *config.Config) *Service {
 	return &Service{
-		cache:     NewCache(cfg.CacheTTL),
+		cache:     cache.New(cfg.CacheTTL),
 		localDB:   NewLocalDB(cfg.MMDBPath),
 		providers: InitProviders(cfg),
 	}
@@ -22,7 +26,7 @@ func NewService(cfg *Config) *Service {
 
 // Lookup performs an IP intelligence lookup.
 // Order: cache → local MMDB + ASN list → external API chain.
-func (s *Service) Lookup(ip string) (*IPInfo, error) {
+func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 	// 1. Check cache
 	if info, ok := s.cache.Get(ip); ok {
 		return info, nil
@@ -69,7 +73,7 @@ func (s *Service) Lookup(ip string) (*IPInfo, error) {
 	}
 
 	// 4. All providers failed, return minimal info
-	fallback := &IPInfo{
+	fallback := &model.IPInfo{
 		IP:     ip,
 		Source: "none",
 	}
@@ -77,7 +81,7 @@ func (s *Service) Lookup(ip string) (*IPInfo, error) {
 }
 
 // queryProviders tries each provider in order until one succeeds.
-func (s *Service) queryProviders(ip string) *IPInfo {
+func (s *Service) queryProviders(ip string) *model.IPInfo {
 	for _, p := range s.providers {
 		if !p.Available() {
 			continue
@@ -100,10 +104,10 @@ func (s *Service) queryProviders(ip string) *IPInfo {
 }
 
 // Stats returns service statistics.
-func (s *Service) Stats() *StatsResponse {
-	providerStatuses := make([]ProviderStatus, len(s.providers))
+func (s *Service) Stats() *model.StatsResponse {
+	providerStatuses := make([]model.ProviderStatus, len(s.providers))
 	for i, p := range s.providers {
-		providerStatuses[i] = ProviderStatus{
+		providerStatuses[i] = model.ProviderStatus{
 			Name:        p.Name,
 			Available:   p.Available(),
 			RateLimit:   p.RateLimit,
@@ -113,12 +117,12 @@ func (s *Service) Stats() *StatsResponse {
 		}
 	}
 
-	return &StatsResponse{
-		CacheSize:  s.cache.Size(),
-		CacheTTL:   s.cache.ttl.String(),
-		Providers:  providerStatuses,
-		LocalDB:    s.localDB != nil,
-		KnownASNs:  len(datacenterASNs),
+	return &model.StatsResponse{
+		CacheSize: s.cache.Size(),
+		CacheTTL:  s.cache.TTL().String(),
+		Providers: providerStatuses,
+		LocalDB:   s.localDB != nil,
+		KnownASNs: len(DatacenterASNs),
 	}
 }
 

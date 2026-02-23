@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -7,17 +7,20 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/akl7777777/ip-intel/internal/lookup"
+	"github.com/akl7777777/ip-intel/internal/model"
 )
 
 // Server is the HTTP server.
 type Server struct {
-	service *Service
+	service *lookup.Service
 	authKey string
 	mux     *http.ServeMux
 }
 
-// NewServer creates a new HTTP server.
-func NewServer(svc *Service, authKey string) *Server {
+// New creates a new HTTP server.
+func New(svc *lookup.Service, authKey string) *Server {
 	s := &Server{
 		service: svc,
 		authKey: authKey,
@@ -89,7 +92,7 @@ func (s *Server) handleLookup(w http.ResponseWriter, r *http.Request) {
 
 	// Skip private/reserved IPs
 	if isPrivateIP(ip) {
-		writeJSON(w, http.StatusOK, &IPInfo{
+		writeJSON(w, http.StatusOK, &model.IPInfo{
 			IP:     ip,
 			Source: "private",
 		})
@@ -122,7 +125,7 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, &ErrorResponse{
+	writeJSON(w, status, &model.ErrorResponse{
 		Error: msg,
 		Code:  status,
 	})

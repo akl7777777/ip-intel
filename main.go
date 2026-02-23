@@ -6,17 +6,21 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/akl7777777/ip-intel/internal/config"
+	"github.com/akl7777777/ip-intel/internal/lookup"
+	"github.com/akl7777777/ip-intel/internal/server"
 )
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
-	cfg := LoadConfig()
+	cfg := config.Load()
 
-	svc := NewService(cfg)
+	svc := lookup.NewService(cfg)
 	defer svc.Close()
 
-	srv := NewServer(svc, cfg.AuthKey)
+	srv := server.New(svc, cfg.AuthKey)
 
 	addr := cfg.Host + ":" + cfg.Port
 	httpServer := &http.Server{
@@ -38,8 +42,7 @@ func main() {
 		authStatus = "enabled"
 	}
 	log.Printf("[main] IP Intel service starting on %s", addr)
-	log.Printf("[main] Local DB: %v | Known ASNs: %d | Providers: %d | Auth: %s",
-		svc.localDB != nil, len(datacenterASNs), len(svc.providers), authStatus)
+	log.Printf("[main] Auth: %s", authStatus)
 
 	if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("[main] Server error: %v", err)

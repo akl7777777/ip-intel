@@ -1,0 +1,19 @@
+# Binary
+ip-intel
+
+# MMDB data files
+data/*.mmdb
+data/*.csv
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

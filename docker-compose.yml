@@ -1,0 +1,21 @@
+services:
+  ip-intel:
+    build: .
+    container_name: ip-intel
+    restart: unless-stopped
+    ports:
+      - "8066:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - CACHE_TTL_HOURS=6
+      - MMDB_PATH=/data/GeoLite2-ASN.mmdb
+      # Optional: authentication key (clients must send Authorization: Bearer <key>)
+      # - AUTH_KEY=your_secret_key_here
+      # Optional: API keys for premium providers
+      # - IPINFO_TOKEN=your_token_here
+      # - IPDATA_API_KEY=your_key_here
+      # Optional: provider priority (comma-separated)
+      # - ENABLED_PROVIDERS=ip-api,ipwhois,freeipapi,ipapi-co,ipdata,ipinfo

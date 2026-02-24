@@ -29,11 +29,13 @@ type ProviderStatus struct {
 
 // StatsResponse is returned by the /stats endpoint.
 type StatsResponse struct {
-	CacheSize int              `json:"cache_size"`
-	CacheTTL  string           `json:"cache_ttl"`
-	Providers []ProviderStatus `json:"providers"`
-	LocalDB   bool             `json:"local_db_loaded"`
-	KnownASNs int              `json:"known_datacenter_asns"`
+	CacheSize            int              `json:"cache_size"`
+	CacheTTL             string           `json:"cache_ttl"`
+	PersistentCacheEnabled bool           `json:"persistent_cache_enabled"`
+	PersistentCacheSize  int              `json:"persistent_cache_size"`
+	Providers            []ProviderStatus `json:"providers"`
+	LocalDB              bool             `json:"local_db_loaded"`
+	KnownASNs            int              `json:"known_datacenter_asns"`
 }
 
 // ErrorResponse is returned on error.

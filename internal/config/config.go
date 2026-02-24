@@ -18,6 +18,11 @@ type Config struct {
 	// Cache
 	CacheTTL time.Duration
 
+	// Persistent cache (SQLite)
+	PersistentCache    bool
+	PersistentCachePath string
+	PersistentCacheTTL  time.Duration
+
 	// Local database
 	MMDBPath string
 
@@ -36,6 +41,10 @@ func Load() *Config {
 		AuthKey:  os.Getenv("AUTH_KEY"),
 		CacheTTL: envDurationOrDefault("CACHE_TTL_HOURS", 6) * time.Hour,
 		MMDBPath: envOrDefault("MMDB_PATH", "data/GeoLite2-ASN.mmdb"),
+
+		PersistentCache:     envBool("PERSISTENT_CACHE", false),
+		PersistentCachePath: envOrDefault("PERSISTENT_CACHE_PATH", "data/ip-cache.db"),
+		PersistentCacheTTL:  envDurationOrDefault("PERSISTENT_CACHE_TTL_DAYS", 7) * 24 * time.Hour,
 
 		IPInfoToken:  os.Getenv("IPINFO_TOKEN"),
 		IPDataAPIKey: os.Getenv("IPDATA_API_KEY"),
@@ -62,4 +71,12 @@ func envDurationOrDefault(key string, def int) time.Duration {
 		}
 	}
 	return time.Duration(def)
+}
+
+func envBool(key string, def bool) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	return v == "true" || v == "1" || v == "yes"
 }

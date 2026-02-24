@@ -5,13 +5,14 @@
 ## 架构
 
 ```
-请求 → 内存缓存 → 本地 MMDB + ASN 列表 → 外部 API 链 → 返回结果
+请求 → 内存缓存 → 本地 MMDB + ASN 列表 → 持久化缓存（SQLite）→ 外部 API 链 → 返回结果
 ```
 
 **查询优先级：**
 1. 内存缓存（TTL 可配，默认 6 小时）
 2. 本地 MMDB 查 ASN → 匹配内嵌机房 ASN 列表（< 1ms，零外部依赖）
-3. 外部 API 链（自动轮转，限速保护）
+3. 持久化缓存 — SQLite 数据库存储历史 API 查询结果（可选，重启不丢失）
+4. 外部 API 链（自动轮转，限速保护）
 
 ## 快速开始
 
@@ -113,6 +114,9 @@ GET /-/stats
 | `IPINFO_TOKEN` | _空_ | ipinfo.io API Token（可选） |
 | `IPDATA_API_KEY` | _空_ | ipdata.co API Key（可选） |
 | `ENABLED_PROVIDERS` | _空_ | Provider 优先顺序，逗号分隔 |
+| `PERSISTENT_CACHE` | `false` | 启用 SQLite 持久化缓存（存储 API 查询结果） |
+| `PERSISTENT_CACHE_PATH` | `data/ip-cache.db` | SQLite 数据库文件路径 |
+| `PERSISTENT_CACHE_TTL_DAYS` | `7` | 缓存条目保留天数 |
 
 ## 外部 API Provider
 

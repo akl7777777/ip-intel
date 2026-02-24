@@ -6,28 +6,41 @@ import (
 	"github.com/akl7777777/ip-intel/internal/cache"
 	"github.com/akl7777777/ip-intel/internal/config"
 	"github.com/akl7777777/ip-intel/internal/model"
+	"github.com/akl7777777/ip-intel/internal/store"
 )
 
 // Service is the core IP intelligence lookup service.
 type Service struct {
 	cache     *cache.Cache
+	store     *store.Store // persistent cache (SQLite), may be nil
 	localDB   *LocalDB
 	providers []*Provider
 }
 
 // NewService creates a new service instance.
 func NewService(cfg *config.Config) *Service {
-	return &Service{
+	svc := &Service{
 		cache:     cache.New(cfg.CacheTTL),
 		localDB:   NewLocalDB(cfg.MMDBPath),
 		providers: InitProviders(cfg),
 	}
+
+	if cfg.PersistentCache {
+		s, err := store.New(cfg.PersistentCachePath, cfg.PersistentCacheTTL)
+		if err != nil {
+			log.Printf("[store] WARNING: Failed to open persistent cache: %v", err)
+		} else {
+			svc.store = s
+		}
+	}
+
+	return svc
 }
 
 // Lookup performs an IP intelligence lookup.
-// Order: cache → local MMDB + ASN list → external API chain.
+// Order: cache → local MMDB + ASN list → persistent cache → external API chain.
 func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
-	// 1. Check cache
+	// 1. Check in-memory cache
 	if info, ok := s.cache.Get(ip); ok {
 		return info, nil
 	}
@@ -42,9 +55,24 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 			return info, nil
 		}
 		// MMDB gave us ASN info but not conclusive about datacenter
-		// Continue to API for proxy/VPN detection
+		// Continue to persistent cache / API for proxy/VPN detection
 		if err == nil {
-			// We have partial local info, try to enrich via API
+			// 3. Check persistent cache before hitting external APIs
+			if s.store != nil {
+				if stored, ok := s.store.Get(ip); ok {
+					// Merge local ASN info if persistent cache missed it
+					if stored.ASN == 0 {
+						stored.ASN = info.ASN
+						stored.ASNOrg = info.ASNOrg
+					}
+					stored.Cached = true
+					s.cache.Set(ip, stored)
+					log.Printf("[lookup] %s → persistent cache (source=%s)", ip, stored.Source)
+					return stored, nil
+				}
+			}
+
+			// 4. Try external API for enrichment
 			enriched := s.queryProviders(ip)
 			if enriched != nil {
 				// Merge: keep API's proxy/vpn/datacenter flags, fill in ASN from local if API missed it
@@ -53,6 +81,7 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 					enriched.ASNOrg = info.ASNOrg
 				}
 				s.cache.Set(ip, enriched)
+				s.persistResult(ip, enriched)
 				return enriched, nil
 			}
 			// All APIs failed, return local result
@@ -61,7 +90,17 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 		}
 	}
 
-	// 3. No local DB, go directly to API chain
+	// 3b. No local DB — check persistent cache
+	if s.store != nil {
+		if stored, ok := s.store.Get(ip); ok {
+			stored.Cached = true
+			s.cache.Set(ip, stored)
+			log.Printf("[lookup] %s → persistent cache (source=%s)", ip, stored.Source)
+			return stored, nil
+		}
+	}
+
+	// 5. No local DB, go directly to API chain
 	info := s.queryProviders(ip)
 	if info != nil {
 		// Cross-check with ASN list
@@ -69,15 +108,23 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 			info.IsDatacenter = true
 		}
 		s.cache.Set(ip, info)
+		s.persistResult(ip, info)
 		return info, nil
 	}
 
-	// 4. All providers failed, return minimal info
+	// 6. All providers failed, return minimal info
 	fallback := &model.IPInfo{
 		IP:     ip,
 		Source: "none",
 	}
 	return fallback, nil
+}
+
+// persistResult saves the lookup result to persistent cache if enabled.
+func (s *Service) persistResult(ip string, info *model.IPInfo) {
+	if s.store != nil {
+		s.store.Set(ip, info)
+	}
 }
 
 // queryProviders tries each provider in order until one succeeds.
@@ -117,17 +164,27 @@ func (s *Service) Stats() *model.StatsResponse {
 		}
 	}
 
-	return &model.StatsResponse{
-		CacheSize: s.cache.Size(),
-		CacheTTL:  s.cache.TTL().String(),
-		Providers: providerStatuses,
-		LocalDB:   s.localDB != nil,
-		KnownASNs: len(DatacenterASNs),
+	resp := &model.StatsResponse{
+		CacheSize:              s.cache.Size(),
+		CacheTTL:               s.cache.TTL().String(),
+		PersistentCacheEnabled: s.store != nil,
+		Providers:              providerStatuses,
+		LocalDB:                s.localDB != nil,
+		KnownASNs:              len(DatacenterASNs),
 	}
+
+	if s.store != nil {
+		resp.PersistentCacheSize = s.store.Size()
+	}
+
+	return resp
 }
 
 // Close cleans up resources.
 func (s *Service) Close() {
 	s.cache.Stop()
 	s.localDB.Close()
+	if s.store != nil {
+		s.store.Close()
+	}
 }

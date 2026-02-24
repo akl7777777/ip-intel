@@ -7,13 +7,14 @@ A lightweight, self-hosted IP intelligence API service. Identifies datacenter, p
 ## Architecture
 
 ```
-Request → Memory Cache → Local MMDB + ASN List → External API Chain → Response
+Request → Memory Cache → Local MMDB + ASN List → Persistent Cache (SQLite) → External API Chain → Response
 ```
 
 **Lookup priority:**
 1. In-memory cache (configurable TTL, default 6 hours)
 2. Local MMDB for ASN lookup → match against embedded datacenter ASN list (< 1ms, zero external dependency)
-3. External API provider chain (automatic rotation with per-provider rate limiting)
+3. Persistent cache — SQLite database storing previous API results (optional, survives restarts)
+4. External API provider chain (automatic rotation with per-provider rate limiting)
 
 ## Quick Start
 
@@ -115,6 +116,9 @@ All configuration is done via environment variables:
 | `IPINFO_TOKEN` | _(empty)_ | ipinfo.io API token (optional) |
 | `IPDATA_API_KEY` | _(empty)_ | ipdata.co API key (optional) |
 | `ENABLED_PROVIDERS` | _(empty)_ | Provider priority order, comma-separated |
+| `PERSISTENT_CACHE` | `false` | Enable persistent SQLite cache for API results |
+| `PERSISTENT_CACHE_PATH` | `data/ip-cache.db` | Path to SQLite database file |
+| `PERSISTENT_CACHE_TTL_DAYS` | `7` | How long to keep cached results (days) |
 
 ## External API Providers
 

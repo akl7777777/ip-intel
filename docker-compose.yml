@@ -12,9 +12,10 @@ services:
       - HOST=0.0.0.0
       - CACHE_TTL_HOURS=6
       - MMDB_PATH=/data/GeoLite2-ASN.mmdb
-      # Optional: persistent cache (SQLite, stores API results across restarts)
+      # Optional: persistent cache (stores API results across restarts)
       # - PERSISTENT_CACHE=true
-      # - PERSISTENT_CACHE_PATH=/data/ip-cache.db
+      # - PERSISTENT_CACHE_TYPE=sqlite           # sqlite or mysql
+      # - PERSISTENT_CACHE_DSN=/data/ip-cache.db # SQLite: file path; MySQL: user:pass@tcp(host:3306)/dbname
       # - PERSISTENT_CACHE_TTL_DAYS=7
       # Optional: authentication key (clients must send Authorization: Bearer <key>)
       # - AUTH_KEY=your_secret_key_here

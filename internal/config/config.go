@@ -18,9 +18,10 @@ type Config struct {
 	// Cache
 	CacheTTL time.Duration
 
-	// Persistent cache (SQLite)
-	PersistentCache    bool
-	PersistentCachePath string
+	// Persistent cache (SQLite or MySQL)
+	PersistentCache     bool
+	PersistentCacheType string // "sqlite" or "mysql"
+	PersistentCacheDSN  string // SQLite: file path; MySQL: DSN string
 	PersistentCacheTTL  time.Duration
 
 	// Local database
@@ -43,7 +44,8 @@ func Load() *Config {
 		MMDBPath: envOrDefault("MMDB_PATH", "data/GeoLite2-ASN.mmdb"),
 
 		PersistentCache:     envBool("PERSISTENT_CACHE", false),
-		PersistentCachePath: envOrDefault("PERSISTENT_CACHE_PATH", "data/ip-cache.db"),
+		PersistentCacheType: envOrDefault("PERSISTENT_CACHE_TYPE", "sqlite"),
+		PersistentCacheDSN:  envOrDefault("PERSISTENT_CACHE_DSN", "data/ip-cache.db"),
 		PersistentCacheTTL:  envDurationOrDefault("PERSISTENT_CACHE_TTL_DAYS", 7) * 24 * time.Hour,
 
 		IPInfoToken:  os.Getenv("IPINFO_TOKEN"),

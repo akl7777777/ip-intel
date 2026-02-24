@@ -116,8 +116,9 @@ All configuration is done via environment variables:
 | `IPINFO_TOKEN` | _(empty)_ | ipinfo.io API token (optional) |
 | `IPDATA_API_KEY` | _(empty)_ | ipdata.co API key (optional) |
 | `ENABLED_PROVIDERS` | _(empty)_ | Provider priority order, comma-separated |
-| `PERSISTENT_CACHE` | `false` | Enable persistent SQLite cache for API results |
-| `PERSISTENT_CACHE_PATH` | `data/ip-cache.db` | Path to SQLite database file |
+| `PERSISTENT_CACHE` | `false` | Enable persistent cache for API results |
+| `PERSISTENT_CACHE_TYPE` | `sqlite` | Cache backend: `sqlite` or `mysql` |
+| `PERSISTENT_CACHE_DSN` | `data/ip-cache.db` | SQLite: file path. MySQL: `user:pass@tcp(host:3306)/dbname` |
 | `PERSISTENT_CACHE_TTL_DAYS` | `7` | How long to keep cached results (days) |
 
 ## External API Providers

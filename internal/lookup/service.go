@@ -12,7 +12,7 @@ import (
 // Service is the core IP intelligence lookup service.
 type Service struct {
 	cache     *cache.Cache
-	store     *store.Store // persistent cache (SQLite), may be nil
+	store     store.Store // persistent cache (SQLite/MySQL), may be nil
 	localDB   *LocalDB
 	providers []*Provider
 }
@@ -26,7 +26,7 @@ func NewService(cfg *config.Config) *Service {
 	}
 
 	if cfg.PersistentCache {
-		s, err := store.New(cfg.PersistentCachePath, cfg.PersistentCacheTTL)
+		s, err := store.New(cfg.PersistentCacheType, cfg.PersistentCacheDSN, cfg.PersistentCacheTTL)
 		if err != nil {
 			log.Printf("[store] WARNING: Failed to open persistent cache: %v", err)
 		} else {

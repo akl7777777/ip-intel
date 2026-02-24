@@ -13,9 +13,15 @@ services:
       - CACHE_TTL_HOURS=6
       - MMDB_PATH=/data/GeoLite2-ASN.mmdb
       # Optional: persistent cache (stores API results across restarts)
+      # --- SQLite mode (default, zero dependency) ---
       # - PERSISTENT_CACHE=true
-      # - PERSISTENT_CACHE_TYPE=sqlite           # sqlite or mysql
-      # - PERSISTENT_CACHE_DSN=/data/ip-cache.db # SQLite: file path; MySQL: user:pass@tcp(host:3306)/dbname
+      # - PERSISTENT_CACHE_TYPE=sqlite
+      # - PERSISTENT_CACHE_DSN=/data/ip-cache.db
+      # - PERSISTENT_CACHE_TTL_DAYS=7
+      # --- MySQL mode (uncomment mysql service below) ---
+      # - PERSISTENT_CACHE=true
+      # - PERSISTENT_CACHE_TYPE=mysql
+      # - PERSISTENT_CACHE_DSN=ipintel:ipintel_pass@tcp(mysql:3306)/ip_intel?parseTime=true
       # - PERSISTENT_CACHE_TTL_DAYS=7
       # Optional: authentication key (clients must send Authorization: Bearer <key>)
       # - AUTH_KEY=your_secret_key_here
@@ -24,3 +30,27 @@ services:
       # - IPDATA_API_KEY=your_key_here
       # Optional: provider priority (comma-separated)
       # - ENABLED_PROVIDERS=ip-api,ipwhois,freeipapi,ipapi-co,ipdata,ipinfo
+    # depends_on:
+    #   mysql:
+    #     condition: service_healthy
+
+  # Optional: MySQL backend for persistent cache
+  # Uncomment this service and the MySQL env vars above to use MySQL instead of SQLite
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: ip-intel-mysql
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - ./data/mysql:/var/lib/mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=root_pass
+  #     - MYSQL_DATABASE=ip_intel
+  #     - MYSQL_USER=ipintel
+  #     - MYSQL_PASSWORD=ipintel_pass
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 10

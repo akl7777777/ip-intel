@@ -17,12 +17,12 @@ services:
       # - PERSISTENT_CACHE=true
       # - PERSISTENT_CACHE_TYPE=sqlite
       # - PERSISTENT_CACHE_DSN=/data/ip-cache.db
-      # - PERSISTENT_CACHE_TTL_DAYS=7
+      # - PERSISTENT_CACHE_TTL_DAYS=90
       # --- MySQL mode (uncomment mysql service below) ---
       # - PERSISTENT_CACHE=true
       # - PERSISTENT_CACHE_TYPE=mysql
       # - PERSISTENT_CACHE_DSN=ipintel:ipintel_pass@tcp(mysql:3306)/ip_intel?parseTime=true
-      # - PERSISTENT_CACHE_TTL_DAYS=7
+      # - PERSISTENT_CACHE_TTL_DAYS=90
       # Optional: authentication key (clients must send Authorization: Bearer <key>)
       # - AUTH_KEY=your_secret_key_here
       # Optional: API keys for premium providers

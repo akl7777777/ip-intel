@@ -117,7 +117,7 @@ GET /-/stats
 | `PERSISTENT_CACHE` | `false` | 启用持久化缓存（存储 API 查询结果） |
 | `PERSISTENT_CACHE_TYPE` | `sqlite` | 缓存后端：`sqlite` 或 `mysql` |
 | `PERSISTENT_CACHE_DSN` | `data/ip-cache.db` | SQLite：文件路径；MySQL：`user:pass@tcp(host:3306)/dbname` |
-| `PERSISTENT_CACHE_TTL_DAYS` | `7` | 缓存条目保留天数 |
+| `PERSISTENT_CACHE_TTL_DAYS` | `90` | 缓存条目保留天数 |
 
 ## 外部 API Provider
 

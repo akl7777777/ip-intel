@@ -46,7 +46,7 @@ func Load() *Config {
 		PersistentCache:     envBool("PERSISTENT_CACHE", false),
 		PersistentCacheType: envOrDefault("PERSISTENT_CACHE_TYPE", "sqlite"),
 		PersistentCacheDSN:  envOrDefault("PERSISTENT_CACHE_DSN", "data/ip-cache.db"),
-		PersistentCacheTTL:  envDurationOrDefault("PERSISTENT_CACHE_TTL_DAYS", 7) * 24 * time.Hour,
+		PersistentCacheTTL:  envDurationOrDefault("PERSISTENT_CACHE_TTL_DAYS", 90) * 24 * time.Hour,
 
 		IPInfoToken:  os.Getenv("IPINFO_TOKEN"),
 		IPDataAPIKey: os.Getenv("IPDATA_API_KEY"),

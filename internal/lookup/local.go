@@ -65,6 +65,12 @@ func (db *LocalDB) Lookup(ipStr string) (*model.IPInfo, error) {
 		info.ASNOrg = org
 	}
 
+	// Known residential ISP overrides datacenter classification
+	if org, ok := IsKnownResidentialASN(record.AutonomousSystemNumber); ok {
+		info.IsDatacenter = false
+		info.ISP = org
+	}
+
 	return info, nil
 }
 

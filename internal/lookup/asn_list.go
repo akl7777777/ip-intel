@@ -67,9 +67,7 @@ var DatacenterASNs = map[int]string{
 	55720:  "Gigabit Hosting (MY)",
 	38731:  "Vietel IDC (VN)",
 	45899:  "VNPT (VN IDC)",
-	56040:  "China Mobile Cloud",
 	37963:  "Alibaba Cloud (HK)",
-	58461:  "China Telecom Cloud",
 	131477: "Sify Technologies (IN)",
 	55933:  "Cloudie (HK)",
 	141995: "Tencent Cloud AP",
@@ -107,8 +105,38 @@ var DatacenterASNs = map[int]string{
 	397213: "Cloudflare",
 }
 
+// ResidentialASNs contains known large ISP ASNs that should never be classified as datacenter.
+// These ISPs serve massive residential/mobile user bases; even if their org name contains "Cloud",
+// the vast majority of IPs are regular end-users (e.g. 4G/5G mobile).
+var ResidentialASNs = map[int]string{
+	// === Chinese Major ISPs ===
+	9808:  "China Mobile",
+	56040: "China Mobile", // Often labeled "China Mobile Cloud" but carries 4G/5G users
+	56041: "China Mobile International",
+	56042: "China Mobile",
+	56046: "China Mobile",
+	56048: "China Mobile",
+	24400: "China Mobile",
+	24444: "China Mobile",
+	4134:  "China Telecom (ChinaNet)",
+	4812:  "China Telecom (Next Carrier Network)",
+	58461: "China Telecom", // Often labeled "China Telecom Cloud" but carries residential users
+	23724: "China Telecom",
+	4837:  "China Unicom (CNCNET)",
+	4808:  "China Unicom",
+	17621: "China Unicom",
+	17816: "China Unicom",
+	9394:  "China Unicom",
+}
+
 // IsKnownDatacenterASN checks if an ASN belongs to a known datacenter.
 func IsKnownDatacenterASN(asn int) (string, bool) {
 	org, ok := DatacenterASNs[asn]
+	return org, ok
+}
+
+// IsKnownResidentialASN checks if an ASN belongs to a known residential ISP.
+func IsKnownResidentialASN(asn int) (string, bool) {
+	org, ok := ResidentialASNs[asn]
 	return org, ok
 }

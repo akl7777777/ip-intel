@@ -65,6 +65,11 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 						stored.ASN = info.ASN
 						stored.ASNOrg = info.ASNOrg
 					}
+					// Known residential ISP overrides stale datacenter flag in cache
+					if org, ok := IsKnownResidentialASN(stored.ASN); ok {
+						stored.IsDatacenter = false
+						stored.ISP = org
+					}
 					stored.Cached = true
 					s.cache.Set(ip, stored)
 					log.Printf("[lookup] %s → persistent cache (source=%s)", ip, stored.Source)
@@ -80,6 +85,11 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 					enriched.ASN = info.ASN
 					enriched.ASNOrg = info.ASNOrg
 				}
+				// Known residential ISP overrides external API's datacenter misclassification
+				if org, ok := IsKnownResidentialASN(enriched.ASN); ok {
+					enriched.IsDatacenter = false
+					enriched.ISP = org
+				}
 				s.cache.Set(ip, enriched)
 				s.persistResult(ip, enriched)
 				return enriched, nil
@@ -93,6 +103,11 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 	// 3b. No local DB — check persistent cache
 	if s.store != nil {
 		if stored, ok := s.store.Get(ip); ok {
+			// Known residential ISP overrides stale datacenter flag in cache
+			if org, ok := IsKnownResidentialASN(stored.ASN); ok {
+				stored.IsDatacenter = false
+				stored.ISP = org
+			}
 			stored.Cached = true
 			s.cache.Set(ip, stored)
 			log.Printf("[lookup] %s → persistent cache (source=%s)", ip, stored.Source)
@@ -106,6 +121,11 @@ func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
 		// Cross-check with ASN list
 		if _, ok := IsKnownDatacenterASN(info.ASN); ok {
 			info.IsDatacenter = true
+		}
+		// Known residential ISP overrides datacenter (prevents external API misclassification)
+		if org, ok := IsKnownResidentialASN(info.ASN); ok {
+			info.IsDatacenter = false
+			info.ISP = org
 		}
 		s.cache.Set(ip, info)
 		s.persistResult(ip, info)

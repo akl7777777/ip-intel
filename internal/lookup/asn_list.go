@@ -32,6 +32,7 @@ var DatacenterASNs = map[int]string{
 	28753:  "LeaseWeb",
 	30633:  "LeaseWeb",
 	9009:   "M247 / G-Core Labs",
+	199524: "G-Core Labs",
 	202053: "UpCloud",
 	35540:  "MivoCloud",
 	42730:  "EVOCATIVE (eStruxture)",
@@ -63,6 +64,7 @@ var DatacenterASNs = map[int]string{
 	// === Asian Hosting Providers ===
 	38001:  "NewMedia Express (SG)",
 	45753:  "NTT SmartConnect (JP)",
+	142594: "SpeedyPage Ltd",
 	132335: "LeapSwitch (IN)",
 	55720:  "Gigabit Hosting (MY)",
 	38731:  "Vietel IDC (VN)",

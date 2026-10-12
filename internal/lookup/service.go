@@ -11,18 +11,20 @@ import (
 
 // Service is the core IP intelligence lookup service.
 type Service struct {
-	cache     *cache.Cache
-	store     store.Store // persistent cache (SQLite/MySQL), may be nil
-	localDB   *LocalDB
-	providers []*Provider
+	cache               *cache.Cache
+	store               store.Store // persistent cache (SQLite/MySQL), may be nil
+	localDB             *LocalDB
+	providers           []*Provider
+	strictFreeProviders bool
 }
 
 // NewService creates a new service instance.
 func NewService(cfg *config.Config) *Service {
 	svc := &Service{
-		cache:     cache.New(cfg.CacheTTL),
-		localDB:   NewLocalDB(cfg.MMDBPath),
-		providers: InitProviders(cfg),
+		cache:               cache.New(cfg.CacheTTL),
+		localDB:             NewLocalDB(cfg.MMDBPath),
+		providers:           InitProviders(cfg),
+		strictFreeProviders: cfg.StrictFreeProviders,
 	}
 
 	if cfg.PersistentCache {
@@ -34,12 +36,20 @@ func NewService(cfg *config.Config) *Service {
 		}
 	}
 
+	if svc.strictFreeProviders {
+		log.Printf("[lookup] STRICT_FREE_PROVIDERS enabled: every keyless provider must clear the IP")
+	}
+
 	return svc
 }
 
 // Lookup performs an IP intelligence lookup.
 // Order: cache → local MMDB + ASN list → persistent cache → external API chain.
 func (s *Service) Lookup(ip string) (*model.IPInfo, error) {
+	if s.strictFreeProviders {
+		return s.lookupStrict(ip), nil
+	}
+
 	// 1. Check in-memory cache
 	if info, ok := s.cache.Get(ip); ok {
 		return info, nil
@@ -191,6 +201,7 @@ func (s *Service) Stats() *model.StatsResponse {
 		Providers:              providerStatuses,
 		LocalDB:                s.localDB != nil,
 		KnownASNs:              len(DatacenterASNs),
+		StrictFreeProviders:    s.strictFreeProviders,
 	}
 
 	if s.store != nil {

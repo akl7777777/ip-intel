@@ -85,6 +85,8 @@ Response `200 OK`:
 | `city` | string | City name |
 | `source` | string | Data source (`local`, `ip-api`, `ipwhois`, etc.) |
 | `cached` | bool | Whether the result was served from cache |
+| `strict_status` | string | Strict mode only: `all_clear`, `risk`, or `unavailable` |
+| `strict_provider` | string | Strict mode only: source of a risk or unavailable verdict |
 
 ### Health Check
 
@@ -101,6 +103,7 @@ GET /-/stats
 ```
 
 Returns cache size, provider status, local database status, and known ASN count.
+When strict mode is enabled, it also returns `strict_free_providers: true`.
 
 ## Configuration
 
@@ -116,6 +119,7 @@ All configuration is done via environment variables:
 | `IPINFO_TOKEN` | _(empty)_ | ipinfo.io API token (optional) |
 | `IPDATA_API_KEY` | _(empty)_ | ipdata.co API key (optional) |
 | `ENABLED_PROVIDERS` | _(empty)_ | Provider priority order, comma-separated |
+| `STRICT_FREE_PROVIDERS` | `false` | Strict mode: require every keyless provider to clear the IP |
 | `PERSISTENT_CACHE` | `false` | Enable persistent cache for API results |
 | `PERSISTENT_CACHE_TYPE` | `sqlite` | Cache backend: `sqlite` or `mysql` |
 | `PERSISTENT_CACHE_DSN` | `data/ip-cache.db` | SQLite: file path. MySQL: `user:pass@tcp(host:3306)/dbname` |
@@ -136,7 +140,19 @@ Built-in support for 6 providers with automatic rotation and per-provider rate l
 
 The first 4 free providers are sufficient for normal usage without any API keys.
 
-> **Note:** ip-api.com free tier is for **non-commercial use only**. For commercial projects, either purchase [ip-api Pro](https://members.ip-api.com/) or exclude it via `ENABLED_PROVIDERS=ipwhois,freeipapi,ipapi-co`.
+### Strict Mode
+
+Set `STRICT_FREE_PROVIDERS=true` to query all four keyless providers for public IPs: ip-api, ipwhois, freeipapi, and ipapi.co. The IP passes with `is_proxy=false` and `strict_status="all_clear"` only when every provider returns a verifiable response and neither the local ASN nor any provider reports datacenter, proxy, VPN, or Tor risk. ipapi.co only contributes an ASN-based datacenter check; it does not independently detect proxies.
+
+Any reported risk returns `is_proxy=true`, `strict_status="risk"` immediately. A failed request, rate limit, or incomplete response also returns `is_proxy=true`, but with `strict_status="unavailable"` to distinguish uncertainty from a confirmed signal. `strict_provider` identifies the source. Providers requiring API keys are not queried. Private IPs retain the existing bypass.
+
+An observed free `ipwhois.app` response (2026-10-12) contained `success=true` but no `security` fields. Such responses produce `strict_status="unavailable"` and `strict_provider="ipwhois"`; lookups that reach this provider may therefore remain blocked while those fields are unavailable. HTTP success and complete geolocation data do not substitute for security results.
+
+Strict mode uses separate cache keys from the default mode and does not cache unavailable results. It is off by default; when off, the existing first-success behavior is unchanged. An uncached strict lookup can use up to four requests and consume more free quota.
+
+For Docker Compose, uncomment `STRICT_FREE_PROVIDERS=true` in `docker-compose.yml` and run `docker compose up -d --build`. Set it back to `false` and recreate the container to restore the default mode.
+
+> **Note:** The ip-api.com free tier is for **non-commercial use only**. `ENABLED_PROVIDERS` changes priority but does not exclude providers, and strict mode queries ip-api. Check provider terms before commercial deployment.
 
 ## Local Database
 

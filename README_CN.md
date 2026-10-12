@@ -83,6 +83,8 @@ Authorization: Bearer <密钥>    # 可选，仅设置 AUTH_KEY 时需要
 | `city` | string | 城市名称 |
 | `source` | string | 数据来源（`local`、`ip-api`、`ipwhois` 等） |
 | `cached` | bool | 是否命中缓存 |
+| `strict_status` | string | 仅严格模式返回：`all_clear`、`risk` 或 `unavailable` |
+| `strict_provider` | string | 仅严格模式命中风险或无法确认时，返回对应来源 |
 
 ### 健康检查
 
@@ -99,6 +101,7 @@ GET /-/stats
 ```
 
 返回缓存大小、Provider 状态、本地数据库状态等信息。
+严格模式开启时还返回 `strict_free_providers: true`。
 
 ## 配置
 
@@ -114,6 +117,7 @@ GET /-/stats
 | `IPINFO_TOKEN` | _空_ | ipinfo.io API Token（可选） |
 | `IPDATA_API_KEY` | _空_ | ipdata.co API Key（可选） |
 | `ENABLED_PROVIDERS` | _空_ | Provider 优先顺序，逗号分隔 |
+| `STRICT_FREE_PROVIDERS` | `false` | 严格模式：所有免密 Provider 都确认无风险才通过 |
 | `PERSISTENT_CACHE` | `false` | 启用持久化缓存（存储 API 查询结果） |
 | `PERSISTENT_CACHE_TYPE` | `sqlite` | 缓存后端：`sqlite` 或 `mysql` |
 | `PERSISTENT_CACHE_DSN` | `data/ip-cache.db` | SQLite：文件路径；MySQL：`user:pass@tcp(host:3306)/dbname` |
@@ -134,7 +138,19 @@ GET /-/stats
 
 不配置 API Key 的情况下，前 4 个免费 Provider 足够日常使用。
 
-> **注意：** ip-api.com 免费版**仅限非商业用途**。商用项目请购买 [ip-api Pro](https://members.ip-api.com/) 或通过 `ENABLED_PROVIDERS=ipwhois,freeipapi,ipapi-co` 排除。
+### 严格模式
+
+设置 `STRICT_FREE_PROVIDERS=true` 后，公网 IP 会按顺序查询全部 4 个免密 Provider：ip-api、ipwhois、freeipapi、ipapi.co。只有四家都成功返回可验证的结果，且本地 ASN 与上游均未标记机房、代理、VPN 或 Tor，才返回 `is_proxy=false`、`strict_status="all_clear"`。ipapi.co 只提供 ASN 风险检查，不具备独立的代理检测能力。
+
+任一来源报告风险时立即返回 `is_proxy=true`、`strict_status="risk"`；请求失败、超限或缺少必要字段时同样返回 `is_proxy=true`，但 `strict_status="unavailable"` 表明这是无法确认，不代表已证实代理。`strict_provider` 标识触发的来源。带 Key 的 Provider 不参与严格模式。私有地址仍按原有规则直接返回。
+
+当前 `ipwhois.app` 免费接口的实测响应（2026-10-12）虽然包含 `success=true`，却没有 `security` 字段。这类响应会返回 `strict_status="unavailable"`、`strict_provider="ipwhois"`，因此启用严格模式后，查询走到该来源时可能持续无法通过。HTTP 成功或地理信息完整不能替代安全检测结果。
+
+严格模式与默认模式使用不同的缓存键，不复用旧判定；无法确认的结果不缓存。此开关默认关闭，关闭时保持原有“首个成功结果即返回”的行为。开启后一次未缓存查询最多请求四家服务，耗时和免费额度消耗会增加。
+
+Docker Compose 部署时取消 `docker-compose.yml` 中 `STRICT_FREE_PROVIDERS=true` 的注释，再运行 `docker compose up -d --build`。改回 `false` 并重建容器即可恢复默认模式。
+
+> **注意：** ip-api.com 免费版**仅限非商业用途**。`ENABLED_PROVIDERS` 只调整顺序，不会排除 Provider；严格模式会查询 ip-api。商用部署需要先确保所用服务的许可适用。
 
 ## 本地数据库
 

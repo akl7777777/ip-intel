@@ -2,19 +2,21 @@ package model
 
 // IPInfo is the result of an IP intelligence lookup.
 type IPInfo struct {
-	IP           string `json:"ip"`
-	IsDatacenter bool   `json:"is_datacenter"`
-	IsProxy      bool   `json:"is_proxy"`
-	IsVPN        bool   `json:"is_vpn"`
-	IsTor        bool   `json:"is_tor"`
-	ASN          int    `json:"asn"`
-	ASNOrg       string `json:"asn_org"`
-	ISP          string `json:"isp"`
-	Country      string `json:"country"`
-	CountryCode  string `json:"country_code"`
-	City         string `json:"city"`
-	Source       string `json:"source"`
-	Cached       bool   `json:"cached"`
+	IP             string `json:"ip"`
+	IsDatacenter   bool   `json:"is_datacenter"`
+	IsProxy        bool   `json:"is_proxy"`
+	IsVPN          bool   `json:"is_vpn"`
+	IsTor          bool   `json:"is_tor"`
+	ASN            int    `json:"asn"`
+	ASNOrg         string `json:"asn_org"`
+	ISP            string `json:"isp"`
+	Country        string `json:"country"`
+	CountryCode    string `json:"country_code"`
+	City           string `json:"city"`
+	Source         string `json:"source"`
+	Cached         bool   `json:"cached"`
+	StrictStatus   string `json:"strict_status,omitempty"`
+	StrictProvider string `json:"strict_provider,omitempty"`
 }
 
 // ProviderStatus represents the status of an external API provider.
@@ -29,13 +31,14 @@ type ProviderStatus struct {
 
 // StatsResponse is returned by the /stats endpoint.
 type StatsResponse struct {
-	CacheSize            int              `json:"cache_size"`
-	CacheTTL             string           `json:"cache_ttl"`
-	PersistentCacheEnabled bool           `json:"persistent_cache_enabled"`
-	PersistentCacheSize  int              `json:"persistent_cache_size"`
-	Providers            []ProviderStatus `json:"providers"`
-	LocalDB              bool             `json:"local_db_loaded"`
-	KnownASNs            int              `json:"known_datacenter_asns"`
+	CacheSize              int              `json:"cache_size"`
+	CacheTTL               string           `json:"cache_ttl"`
+	PersistentCacheEnabled bool             `json:"persistent_cache_enabled"`
+	PersistentCacheSize    int              `json:"persistent_cache_size"`
+	Providers              []ProviderStatus `json:"providers"`
+	LocalDB                bool             `json:"local_db_loaded"`
+	KnownASNs              int              `json:"known_datacenter_asns"`
+	StrictFreeProviders    bool             `json:"strict_free_providers,omitempty"`
 }
 
 // ErrorResponse is returned on error.

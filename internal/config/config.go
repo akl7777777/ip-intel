@@ -32,7 +32,8 @@ type Config struct {
 	IPDataAPIKey string
 
 	// Provider control
-	EnabledProviders []string
+	EnabledProviders    []string
+	StrictFreeProviders bool
 }
 
 func Load() *Config {
@@ -48,8 +49,9 @@ func Load() *Config {
 		PersistentCacheDSN:  envOrDefault("PERSISTENT_CACHE_DSN", "data/ip-cache.db"),
 		PersistentCacheTTL:  envDurationOrDefault("PERSISTENT_CACHE_TTL_DAYS", 90) * 24 * time.Hour,
 
-		IPInfoToken:  os.Getenv("IPINFO_TOKEN"),
-		IPDataAPIKey: os.Getenv("IPDATA_API_KEY"),
+		IPInfoToken:         os.Getenv("IPINFO_TOKEN"),
+		IPDataAPIKey:        os.Getenv("IPDATA_API_KEY"),
+		StrictFreeProviders: envBool("STRICT_FREE_PROVIDERS", false),
 	}
 
 	if providers := os.Getenv("ENABLED_PROVIDERS"); providers != "" {

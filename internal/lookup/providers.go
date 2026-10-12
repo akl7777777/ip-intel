@@ -15,11 +15,12 @@ import (
 
 // Provider is an external IP intelligence API.
 type Provider struct {
-	Name      string
-	QueryFn   func(ip string) (*model.IPInfo, error)
-	RateLimit int // max requests per minute, 0 = needs API key
-	NeedsKey  bool
-	HasKey    bool
+	Name          string
+	QueryFn       func(ip string) (*model.IPInfo, error)
+	StrictQueryFn func(ip string) (*model.IPInfo, error)
+	RateLimit     int // max requests per minute, 0 = needs API key
+	NeedsKey      bool
+	HasKey        bool
 
 	mu        sync.Mutex
 	callTimes []int64
@@ -168,7 +169,7 @@ func queryIPWhois(ip string) (*model.IPInfo, error) {
 	return &model.IPInfo{
 		IP: ip, IsDatacenter: resp.Security.Hosting,
 		IsProxy: resp.Security.Proxy || resp.Security.Anonymous,
-		IsVPN: resp.Security.VPN, IsTor: resp.Security.Tor,
+		IsVPN:   resp.Security.VPN, IsTor: resp.Security.Tor,
 		ASN: parseASN(resp.ASN), ASNOrg: resp.Org, ISP: resp.ISP,
 		Country: resp.Country, CountryCode: resp.CountryCode, City: resp.City,
 		Source: "ipwhois",
@@ -270,7 +271,7 @@ func makeQueryIPInfo(token string) func(string) (*model.IPInfo, error) {
 		return &model.IPInfo{
 			IP: ip, IsDatacenter: resp.Privacy.Hosting,
 			IsProxy: resp.Privacy.Proxy || resp.Privacy.Relay,
-			IsVPN: resp.Privacy.VPN, IsTor: resp.Privacy.Tor,
+			IsVPN:   resp.Privacy.VPN, IsTor: resp.Privacy.Tor,
 			ASN: parseASN(resp.Org), ASNOrg: resp.Org, ISP: resp.Org,
 			Country: resp.Country, City: resp.City,
 			Source: "ipinfo",
@@ -281,10 +282,10 @@ func makeQueryIPInfo(token string) func(string) (*model.IPInfo, error) {
 // InitProviders builds the provider chain based on config.
 func InitProviders(cfg *config.Config) []*Provider {
 	providers := []*Provider{
-		{Name: "ip-api", QueryFn: queryIPAPI, RateLimit: 40, HasKey: true},
-		{Name: "ipwhois", QueryFn: queryIPWhois, RateLimit: 40, HasKey: true},
-		{Name: "freeipapi", QueryFn: queryFreeIPAPI, RateLimit: 55, HasKey: true},
-		{Name: "ipapi-co", QueryFn: queryIPAPICo, RateLimit: 25, HasKey: true},
+		{Name: "ip-api", QueryFn: queryIPAPI, StrictQueryFn: queryStrictIPAPI, RateLimit: 40, HasKey: true},
+		{Name: "ipwhois", QueryFn: queryIPWhois, StrictQueryFn: queryStrictIPWhois, RateLimit: 40, HasKey: true},
+		{Name: "freeipapi", QueryFn: queryFreeIPAPI, StrictQueryFn: queryStrictFreeIPAPI, RateLimit: 55, HasKey: true},
+		{Name: "ipapi-co", QueryFn: queryIPAPICo, StrictQueryFn: queryStrictIPAPICo, RateLimit: 25, HasKey: true},
 	}
 
 	if cfg.IPDataAPIKey != "" {

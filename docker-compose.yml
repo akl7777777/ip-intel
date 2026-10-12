@@ -30,6 +30,8 @@ services:
       # - IPDATA_API_KEY=your_key_here
       # Optional: provider priority (comma-separated)
       # - ENABLED_PROVIDERS=ip-api,ipwhois,freeipapi,ipapi-co,ipdata,ipinfo
+      # Optional: require all four keyless providers to clear the IP (default: false)
+      # - STRICT_FREE_PROVIDERS=true
     # depends_on:
     #   mysql:
     #     condition: service_healthy
